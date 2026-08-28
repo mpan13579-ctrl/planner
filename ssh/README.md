@@ -98,7 +98,8 @@ curl http://localhost:8000/v1/chat/completions \
 
 Any OpenAI-compatible client works the same way — set its base URL to
 `http://localhost:8000/v1`. Unless vLLM was started with `--api-key`, it
-accepts any key (or none), so the tunnel is the only access control.
+accepts any key (or none) — so once vLLM is bound to loopback (below), the
+tunnel is the only access control.
 
 Two things on lp0's side:
 
