@@ -80,6 +80,37 @@ Keep the `127.0.0.1:` prefix on local forwards unless you deliberately want
 other machines on your LAN to reach the forwarded port — without it, ssh
 binds the port on all interfaces.
 
+## Reaching the vLLM server on lp0
+
+lp0 serves its model through vLLM's OpenAI-compatible server (`vllm serve`),
+which listens on port 8000 unless started with `--port`. The example forward
+`127.0.0.1:8000:localhost:8000` carries it across the bridge, so clients on
+this machine use `http://localhost:8000/v1` exactly as if vLLM were running
+locally:
+
+```sh
+curl http://localhost:8000/v1/models     # sanity check: lists the loaded model
+curl http://localhost:8000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model": "<id from /v1/models>",
+       "messages": [{"role": "user", "content": "hello"}]}'
+```
+
+Any OpenAI-compatible client works the same way — set its base URL to
+`http://localhost:8000/v1`. Unless vLLM was started with `--api-key`, it
+accepts any key (or none), so the tunnel is the only access control.
+
+Two things on lp0's side:
+
+- vLLM binds all interfaces by default, which exposes an unauthenticated
+  model server to lp0's whole network. Start it with `--host 127.0.0.1` so
+  the bridge is the only way in — the forward still reaches it, because the
+  `localhost:8000` half of the `-L` spec is resolved on lp0 itself, not
+  here.
+- If vLLM runs on a non-default port, change **both** port numbers in the
+  forward to match (or only the right-hand one, if you want the local port
+  to stay 8000).
+
 ## Interactive access
 
 `config.lp0.example` is a separate `~/.ssh/config` entry giving you
