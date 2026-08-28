@@ -1,0 +1,45 @@
+# Linux: run the lp0 bridge as a user service.
+#
+#   mkdir -p ~/.config/systemd/user
+#   sed "s|%REPO%|$PWD|g" systemd/lp0-bridge.service > ~/.config/systemd/user/lp0-bridge.service
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now lp0-bridge
+#   journalctl --user -u lp0-bridge -f
+#
+# So the bridge survives logout and starts at boot:
+#   sudo loginctl enable-linger "$USER"
+
+[Unit]
+Description=SSH bridge to lp0
+Documentation=file://%REPO%/ssh/README.md
+After=network-online.target
+Wants=network-online.target
+
+# Never give up: without this, 5 restarts in 10s would leave the unit failed.
+# (This directive belongs in [Unit]; systemd only tolerates it in [Service].)
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=%REPO%/ssh/lp0-bridge.sh up
+Environment=LP0_BRIDGE_ENV=%REPO%/ssh/lp0-bridge.env
+
+# The script holds its own connection open and retries internally, but if it
+# exits for any reason, bring it straight back.
+Restart=always
+RestartSec=5s
+
+# Modest hardening — the bridge needs the network and the user's ~/.ssh keys,
+# and nothing else.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+
+[Install]
+WantedBy=default.target

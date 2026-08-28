@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  macOS: run the lp0 bridge as a per-user LaunchAgent.
+
+    mkdir -p ~/Library/LaunchAgents
+    sed "s|%REPO%|$PWD|g" launchd/com.lp0.bridge.plist \
+      > ~/Library/LaunchAgents/com.lp0.bridge.plist
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.lp0.bridge.plist
+    launchctl print gui/$(id -u)/com.lp0.bridge
+    tail -f /tmp/lp0-bridge.log
+
+  To stop and unload:
+    launchctl bootout gui/$(id -u)/com.lp0.bridge
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.lp0.bridge</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>%REPO%/ssh/lp0-bridge.sh</string>
+        <string>up</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>LP0_BRIDGE_ENV</key>
+        <string>%REPO%/ssh/lp0-bridge.env</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Restart if the bridge ever exits. -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Do not respawn faster than this; launchd throttles below 10s anyway. -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/lp0-bridge.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/lp0-bridge.log</string>
+</dict>
+</plist>

@@ -1,0 +1,6 @@
+# Local, host-specific bridge settings — never commit.
+ssh/lp0-bridge.env
+
+# Generated service units with absolute paths filled in.
+systemd/lp0-bridge.service.local
+launchd/*.local.plist

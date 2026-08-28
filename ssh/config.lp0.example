@@ -1,0 +1,35 @@
+# SSH client config for lp0 — for interactive use (`ssh lp0`, scp, rsync,
+# git over ssh). The bridge daemon does NOT read this file; it builds its
+# own arguments from lp0-bridge.env so the two cannot drift apart.
+#
+# Install with:
+#   mkdir -p ~/.ssh/config.d && chmod 700 ~/.ssh/config.d
+#   cp ssh/config.lp0.example ~/.ssh/config.d/lp0
+#   chmod 600 ~/.ssh/config.d/lp0
+#
+# Then ensure this is the FIRST line of ~/.ssh/config — Include must come
+# before any Host block, since directives are taken first-match-wins:
+#   Include ~/.ssh/config.d/*
+
+Host lp0
+    HostName            lp0.example.internal
+    User                your-username
+    Port                22
+    IdentityFile        ~/.ssh/id_lp0
+    IdentitiesOnly      yes
+
+    # Uncomment if lp0 is only reachable through a bastion.
+    # ProxyJump         user@bastion.example.net
+
+    # Detect a dead link rather than hanging on a half-open socket.
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+
+    # Reuse one connection for subsequent sessions — the second `ssh lp0`
+    # is near-instant. The socket lives 10 minutes past the last session.
+    ControlMaster       auto
+    ControlPath         ~/.ssh/control/%C
+    ControlPersist      10m
+
+# Multiplexing needs the socket directory to exist and be private:
+#   mkdir -p ~/.ssh/control && chmod 700 ~/.ssh/control
