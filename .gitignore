@@ -4,3 +4,6 @@ ssh/lp0-bridge.env
 # Generated service units with absolute paths filled in.
 systemd/lp0-bridge.service.local
 launchd/*.local.plist
+
+# Python bytecode
+__pycache__/
