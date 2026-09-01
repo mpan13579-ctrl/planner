@@ -112,6 +112,12 @@ Two things on lp0's side:
   forward to match (or only the right-hand one, if you want the local port
   to stay 8000).
 
+## Windows
+
+On a Windows machine, use the PowerShell port in `../windows/` instead of
+the bash script — same config file, same behavior, Task Scheduler as the
+background service. Full walkthrough: `../windows/README.md`.
+
 ## Interactive access
 
 `config.lp0.example` is a separate `~/.ssh/config` entry giving you
