@@ -10,22 +10,38 @@ served model automatically, streams answers as they generate, and keeps the
 conversation going across turns. The model's thinking is shown dimmed;
 pass -q to hide it.
 
+If the server requires an API key, set one before running:
+
+    export LP0_API_KEY=your-key        # or OPENAI_API_KEY
+
 Commands inside the chat:  /new  start a fresh conversation
                            /quit exit (Ctrl+C during an answer just stops
                                  that answer; Ctrl+C at the prompt exits)
 """
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
 
 BASE = "http://localhost:8000/v1"
+# vLLM ignores the value unless it was started with --api-key, but it always
+# wants the header, so fall back to a placeholder rather than omitting it.
+API_KEY = os.environ.get("LP0_API_KEY") or os.environ.get("OPENAI_API_KEY") or "not-needed"
 DIM = "\033[2m"
 RESET = "\033[0m"
 
 
+def auth_headers(extra=None):
+    headers = {"Authorization": "Bearer " + API_KEY}
+    if extra:
+        headers.update(extra)
+    return headers
+
+
 def fetch_model():
-    with urllib.request.urlopen(BASE + "/models", timeout=5) as r:
+    req = urllib.request.Request(BASE + "/models", headers=auth_headers())
+    with urllib.request.urlopen(req, timeout=5) as r:
         models = json.load(r)["data"]
     if not models:
         sys.exit("The server is up but reports no models.")
@@ -39,10 +55,7 @@ def stream_reply(model, messages, show_reasoning):
         data=json.dumps(
             {"model": model, "messages": messages, "stream": True}
         ).encode(),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": "Bearer not-needed",
-        },
+        headers=auth_headers({"Content-Type": "application/json"}),
     )
     answer = []
     in_reasoning = False
@@ -84,6 +97,14 @@ def main():
     show_reasoning = "-q" not in sys.argv[1:]
     try:
         model = fetch_model()
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            sys.exit(
+                "The server rejected the API key (HTTP " + str(e.code) + ").\n"
+                "vLLM was started with --api-key, so set yours and retry:\n"
+                "    export LP0_API_KEY=your-key"
+            )
+        sys.exit("The server returned HTTP " + str(e.code) + " for " + BASE + "/models.")
     except (urllib.error.URLError, OSError):
         sys.exit(
             "Can't reach the model at " + BASE + ".\n"

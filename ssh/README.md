@@ -96,6 +96,13 @@ curl http://localhost:8000/v1/chat/completions \
        "messages": [{"role": "user", "content": "hello"}]}'
 ```
 
+If the server was started with `--api-key`, pass yours through the
+environment — `chat.py` and most clients read it from there:
+
+```sh
+export LP0_API_KEY=your-key
+```
+
 Any OpenAI-compatible client works the same way — set its base URL to
 `http://localhost:8000/v1`. Unless vLLM was started with `--api-key`, it
 accepts any key (or none) — so once vLLM is bound to loopback (below), the

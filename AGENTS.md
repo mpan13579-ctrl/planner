@@ -8,7 +8,8 @@ are an AI agent working on this machine, here is what you need to know.
 An OpenAI-compatible LLM API is available at:
 
 - **Base URL:** `http://localhost:8000/v1`
-- **API key:** any non-empty string (no real auth; the tunnel is the access control)
+- **API key:** read from `LP0_API_KEY` (or `OPENAI_API_KEY`); when the
+  server runs without `--api-key` any non-empty string works
 - **Model name:** ask `GET /v1/models` for the current one rather than hardcoding
 
 Properties of the served model: reasoning model (thinking streams in the
@@ -18,7 +19,7 @@ Properties of the served model: reasoning model (thinking streams in the
 To use it as an LLM backend, most OpenAI-compatible tooling needs only:
 
     OPENAI_BASE_URL=http://localhost:8000/v1
-    OPENAI_API_KEY=not-needed
+    OPENAI_API_KEY=<the key, or any non-empty string if the server has none>
 
 ## How the endpoint exists (and how to revive it)
 
@@ -28,7 +29,11 @@ loopback, so this tunnel is the only path. Health check:
 
     curl http://localhost:8000/v1/models
 
-If that fails, the tunnel is down. Start it:
+An HTTP 401/403 there means the opposite of a dead tunnel: the connection
+works and the server wants a valid key. Never scrape a key off the server
+(e.g. from its process list) — ask the server's owner for one.
+
+If that fails with a connection error, the tunnel is down. Start it:
 
 - macOS / Linux: `./ssh/lp0-bridge.sh up` (or the launchd/systemd service
   in `launchd/` / `systemd/`)
