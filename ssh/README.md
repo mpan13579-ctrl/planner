@@ -135,6 +135,17 @@ silently drift apart.
 
 ## Troubleshooting
 
+Start with the one-command diagnosis — it walks every layer from your
+machine to the model and names the first one that's broken, with the fix:
+
+```sh
+./ssh/diagnose.sh
+```
+
+If it ends in "THE MODEL SERVICE IS DOWN", see `../server/README.md` for
+making vLLM restart itself so that stops happening.
+
+
 | Symptom | Cause |
 | --- | --- |
 | `Host key verification failed` | Step 3 was skipped. |

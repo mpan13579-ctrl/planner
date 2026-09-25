@@ -33,6 +33,10 @@ An HTTP 401/403 there means the opposite of a dead tunnel: the connection
 works and the server wants a valid key. Never scrape a key off the server
 (e.g. from its process list) — ask the server's owner for one.
 
+For anything more than a quick probe, run `./ssh/diagnose.sh` — it checks
+every layer (local tunnel → Tailscale reach → sshd → key → vLLM on the
+server) and prints a verdict with the fix.
+
 If that fails with a connection error, the tunnel is down. Start it:
 
 - macOS / Linux: `./ssh/lp0-bridge.sh up` (or the launchd/systemd service
