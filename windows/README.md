@@ -70,6 +70,17 @@ powershell -ExecutionPolicy Bypass -File windows\install-task.ps1
 Remove later with
 `Unregister-ScheduledTask -TaskName lp0-bridge -Confirm:$false`.
 
+## When something breaks
+
+One command walks every layer and names the first broken one, with the fix:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File windows\diagnose.ps1
+```
+
+Note that Windows PowerShell does not accept `&&` between commands; use `;`
+or separate lines.
+
 ## Notes
 
 - `-ExecutionPolicy Bypass` is needed because Windows blocks unsigned
