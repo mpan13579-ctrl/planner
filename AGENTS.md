@@ -12,9 +12,15 @@ An OpenAI-compatible LLM API is available at:
   server runs without `--api-key` any non-empty string works
 - **Model name:** ask `GET /v1/models` for the current one rather than hardcoding
 
-Properties of the served model: reasoning model (thinking streams in the
-`reasoning` / `reasoning_content` delta field, the answer in `content`),
-~512k-token context window, tool/function calling and streaming supported.
+Properties of the served model (currently `deepseek-v4.1-flash`; the
+model has changed before, so query `/v1/models` rather than assuming):
+~512k-token context window, tool/function calling and streaming supported,
+reasoning model — but the server's default chat template has
+**thinking disabled** (`thinking: false`, `reasoning_effort: low`). To get
+reasoning on a request, pass `extra_body={"chat_template_kwargs":
+{"thinking": true}}`; the thinking then streams in the `reasoning` /
+`reasoning_content` delta field, the answer in `content`. Concurrency is
+capped at 8 in-flight sequences, so batch work should throttle.
 
 To use it as an LLM backend, most OpenAI-compatible tooling needs only:
 

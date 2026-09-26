@@ -94,8 +94,8 @@ else
 fi
 
 # --- 6. the model service on the far side ----------------------------------
-remote="$("${SSH[@]}" "curl -s -m 5 -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer $KEY' http://$REMOTE_HOST:$REMOTE_PORT/v1/models; echo; docker ps --filter status=running --format '{{.Names}}' 2>/dev/null | grep -c . ; ps aux | grep -c '[v]llm serve'" 2>/dev/null || true)"
-rcode="$(echo "$remote" | sed -n 1p)"; containers="$(echo "$remote" | sed -n 2p)"; procs="$(echo "$remote" | sed -n 3p)"
+remote="$("${SSH[@]}" "curl -s -m 5 -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer $KEY' http://$REMOTE_HOST:$REMOTE_PORT/v1/models; echo; docker ps --filter status=running --format '{{.Names}}' 2>/dev/null | grep -c . ; docker ps --filter status=running --format '{{.Names}}' 2>/dev/null | tr '\n' ' '" 2>/dev/null || true)"
+rcode="$(echo "$remote" | sed -n 1p)"; containers="$(echo "$remote" | sed -n 2p)"; names="$(echo "$remote" | sed -n 3p)"
 case "$rcode" in
   200) ok "vLLM answers on the server at $REMOTE_HOST:$REMOTE_PORT"
        if (( tunnel_up )); then
@@ -105,6 +105,6 @@ case "$rcode" in
        fi ;;
   401|403) ok "vLLM is up on the server (it rejected the key: HTTP $rcode)"
        verdict "vLLM requires an API key you haven't set." "export LP0_API_KEY=<key>" ;;
-  *)   bad "vLLM is NOT answering on the server at $REMOTE_HOST:$REMOTE_PORT (running containers: ${containers:-?}, vllm processes: ${procs:-?})"
+  *)   bad "vLLM is NOT answering on the server at $REMOTE_HOST:$REMOTE_PORT (running containers: ${containers:-?}: ${names:-none})"
        verdict "THE MODEL SERVICE IS DOWN on the box — the container/process died and nothing restarted it. The tunnel is fine." "on the box: docker ps -a  — then restart the vLLM container. See server/README.md for making it restart itself." ;;
 esac

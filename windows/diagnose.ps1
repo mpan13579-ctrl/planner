@@ -109,11 +109,11 @@ else {
 }
 
 # --- 6. the model service on the far side ----------------------------------
-$remoteCmd = "curl -s -m 5 -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer $key' http://${remoteHost}:$remotePort/v1/models; echo; docker ps --filter status=running --format '{{.Names}}' 2>/dev/null | grep -c . ; ps aux | grep -c '[v]llm serve'"
+$remoteCmd = "curl -s -m 5 -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer $key' http://${remoteHost}:$remotePort/v1/models; echo; docker ps --filter status=running --format '{{.Names}}' 2>/dev/null | grep -c . ; docker ps --filter status=running --format '{{.Names}}' 2>/dev/null | tr '\n' ' '"
 $remote = & ssh @sshBase $remoteCmd 2>$null
 $rcode = "$($remote | Select-Object -Index 0)".Trim()
 $containers = "$($remote | Select-Object -Index 1)".Trim()
-$procs = "$($remote | Select-Object -Index 2)".Trim()
+$names = "$($remote | Select-Object -Index 2)".Trim()
 switch ($rcode) {
     '200' { Ok "vLLM answers on the server at ${remoteHost}:$remotePort"
             if ($tunnelUp) { Verdict "server and vLLM are healthy but the tunnel isn't delivering -- stale ssh session." "Restart-ScheduledTask -TaskName lp0-bridge" }
@@ -122,6 +122,6 @@ switch ($rcode) {
             Ok "vLLM is up on the server (it rejected the key: HTTP $rcode)"
             Verdict "vLLM requires an API key you haven't set." '$env:LP0_API_KEY = "<key>"' }
     default {
-            Bad "vLLM is NOT answering on the server at ${remoteHost}:$remotePort (running containers: $containers, vllm processes: $procs)"
+            Bad "vLLM is NOT answering on the server at ${remoteHost}:$remotePort (running containers: ${containers}: $names)"
             Verdict "THE MODEL SERVICE IS DOWN on the box -- the container/process died and nothing restarted it. The tunnel is fine." "on the box: docker ps -a  -- then restart the vLLM container. See server\README.md for making it restart itself." }
 }
